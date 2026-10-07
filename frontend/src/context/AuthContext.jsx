@@ -32,8 +32,8 @@ export const AuthProvider = ({ children }) => {
     verifyAuth();
   }, []);
 
-  const login = async (email, password) => {
-    const res = await authAPI.login({ email, password });
+  const login = async (email, password, portal) => {
+    const res = await authAPI.login({ email, password, portal });
     if (res.data.success) {
       const { token: newToken, user: newUser } = res.data;
       setToken(newToken);

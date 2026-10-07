@@ -61,21 +61,27 @@ exports.registerUser = async (req, res, next) => {
 // @access  Public
 exports.loginUser = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, portal } = req.body;
+    const identifier = (email || req.body.username || req.body.identifier || '').trim();
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email and password',
+        message: 'Please provide email/username and password',
       });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { studentId: identifier },
+      ],
+    }).select('+password');
 
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: 'Invalid username/email or password',
       });
     }
 
@@ -83,6 +89,21 @@ exports.loginUser = async (req, res, next) => {
       return res.status(403).json({
         success: false,
         message: 'Account is deactivated. Please contact an administrator.',
+      });
+    }
+
+    // Portal role validation if specified
+    if (portal === 'student' && user.role !== 'student') {
+      return res.status(403).json({
+        success: false,
+        message: 'Staff and Administrators must sign in through the Staff & Faculty Portal.',
+      });
+    }
+
+    if (portal === 'staff' && user.role === 'student') {
+      return res.status(403).json({
+        success: false,
+        message: 'Students must sign in through the Student Portal.',
       });
     }
 
