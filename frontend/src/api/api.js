@@ -40,6 +40,8 @@ export const authAPI = {
   getMe: () => api.get('/auth/me'),
   updatePassword: (passwords) => api.put('/auth/update-password', passwords),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
+  resetPassword: (token, password) => api.put(`/auth/reset-password/${token}`, { password }),
 };
 
 // Users & Profile Endpoints
