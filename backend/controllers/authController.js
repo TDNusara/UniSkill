@@ -271,10 +271,20 @@ exports.verifyOtp = async (req, res, next) => {
       });
     }
 
+    // Sanitize OTP input (strip whitespace, hyphens, and non-digits)
+    const cleanOtp = String(otp).replace(/\D/g, '').trim();
+
+    if (cleanOtp.length !== 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification code must be exactly 6 digits',
+      });
+    }
+
     // Hash user-provided OTP
     const hashedOtp = crypto
       .createHash('sha256')
-      .update(otp.toString().trim())
+      .update(cleanOtp)
       .digest('hex');
 
     const user = await User.findOne({

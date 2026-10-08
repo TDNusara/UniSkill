@@ -24,7 +24,8 @@ const ForgotPassword = () => {
 
   // OTP Step
   const [otp, setOtp] = useState('');
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes timer
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes total timer
+  const [resendCooldown, setResendCooldown] = useState(60); // 60 seconds resend cooldown
   const [resetToken, setResetToken] = useState('');
 
   // New Password Step
@@ -35,16 +36,17 @@ const ForgotPassword = () => {
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
-  // Countdown timer for OTP
+  // Countdown timer for OTP expiry & resend cooldown
   useEffect(() => {
     let timer;
-    if (step === 'otp' && timeLeft > 0) {
+    if (step === 'otp') {
       timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [step, timeLeft]);
+  }, [step]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -69,6 +71,8 @@ const ForgotPassword = () => {
         setDevOtp(res.data.devOtp);
       }
       setTimeLeft(600);
+      setResendCooldown(60);
+      setOtp('');
       setStep('otp');
       showSuccess(res.data.message || 'Verification code dispatched to your registered email.');
     } catch (err) {
@@ -84,14 +88,15 @@ const ForgotPassword = () => {
   // STEP 2: Verify OTP
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    if (!otp || otp.trim().length !== 6) {
+    const cleanOtp = otp.replace(/\D/g, '').trim();
+    if (!cleanOtp || cleanOtp.length !== 6) {
       showError('Please enter the valid 6-digit verification code');
       return;
     }
 
     try {
       setLoading(true);
-      const res = await authAPI.verifyOtp(accountEmail, otp.trim());
+      const res = await authAPI.verifyOtp(accountEmail, cleanOtp);
       setResetToken(res.data.resetToken);
       setStep('new_password');
       showSuccess('Identity verified! Please set your new password.');
@@ -104,6 +109,7 @@ const ForgotPassword = () => {
 
   // Resend OTP
   const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
     try {
       setLoading(true);
       const res = await authAPI.forgotPassword(accountEmail);
@@ -111,6 +117,7 @@ const ForgotPassword = () => {
         setDevOtp(res.data.devOtp);
       }
       setTimeLeft(600);
+      setResendCooldown(60);
       setOtp('');
       showSuccess('A fresh 6-digit code has been sent to your email.');
     } catch (err) {
@@ -242,6 +249,11 @@ const ForgotPassword = () => {
                 maxLength={6}
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                  if (pasted) setOtp(pasted);
+                }}
                 placeholder="123456"
                 autoFocus
                 required
@@ -250,9 +262,9 @@ const ForgotPassword = () => {
             </div>
 
             {devOtp && (
-              <div className="mt-2 p-2 rounded-lg bg-amber-50 border border-amber-200 text-center">
-                <span className="text-[11px] font-semibold text-amber-800">
-                  ⚡ Development Mode Simulated OTP: <strong>{devOtp}</strong>
+              <div className="mt-2 p-2 rounded-lg bg-indigo-50/80 border border-indigo-200 text-center">
+                <span className="text-[11px] font-semibold text-indigo-900">
+                  📩 Active OTP Code sent to email: <strong className="font-mono tracking-widest text-indigo-700">{devOtp}</strong>
                 </span>
               </div>
             )}
@@ -260,7 +272,7 @@ const ForgotPassword = () => {
 
           <button
             type="submit"
-            disabled={loading || otp.length !== 6 || timeLeft === 0}
+            disabled={loading || otp.replace(/\D/g, '').length !== 6 || timeLeft === 0}
             className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-200 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
           >
             <ShieldCheck className="w-4 h-4" />
@@ -271,16 +283,23 @@ const ForgotPassword = () => {
             <button
               type="button"
               onClick={handleResendOtp}
-              disabled={loading}
-              className="font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 disabled:opacity-50"
+              disabled={loading || resendCooldown > 0}
+              className="font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Resend Code</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>
+                {resendCooldown > 0
+                  ? `Resend Code in ${resendCooldown}s`
+                  : 'Resend Code'}
+              </span>
             </button>
 
             <button
               type="button"
-              onClick={() => setStep('request')}
+              onClick={() => {
+                setStep('request');
+                setOtp('');
+              }}
               className="text-slate-500 hover:text-slate-800"
             >
               Change Email / ID

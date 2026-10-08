@@ -10,6 +10,8 @@ import {
   GraduationCap,
   Briefcase,
   ShieldCheck,
+  Sparkles,
+  Key,
 } from 'lucide-react';
 
 const Login = () => {
@@ -183,7 +185,53 @@ const Login = () => {
         </button>
       </form>
 
+      {/* Quick Demo Credentials Box */}
+      <div className="mt-6 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 mb-2">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <span>Quick Demo Logins (Click to Autofill):</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setPortal('student');
+              setIdentifier('student@uniskill.edu');
+              setPassword('student123');
+            }}
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 transition-all text-center group"
+          >
+            <span className="text-[11px] font-bold text-indigo-700 group-hover:underline">Student</span>
+            <span className="text-[9px] text-slate-400 mt-0.5 font-mono">student123</span>
+          </button>
 
+          <button
+            type="button"
+            onClick={() => {
+              setPortal('staff');
+              setIdentifier('supervisor@uniskill.edu');
+              setPassword('supervisor123');
+            }}
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 transition-all text-center group"
+          >
+            <span className="text-[11px] font-bold text-emerald-700 group-hover:underline">Supervisor</span>
+            <span className="text-[9px] text-slate-400 mt-0.5 font-mono">supervisor123</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setPortal('staff');
+              setIdentifier('admin@uniskill.edu');
+              setPassword('admin123');
+            }}
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white hover:bg-purple-50 border border-slate-200 hover:border-purple-300 transition-all text-center group"
+          >
+            <span className="text-[11px] font-bold text-purple-700 group-hover:underline">Admin</span>
+            <span className="text-[9px] text-slate-400 mt-0.5 font-mono">admin123</span>
+          </button>
+        </div>
+      </div>
 
       <div className="mt-6 text-center text-xs text-slate-500">
         Don't have an account?{' '}
