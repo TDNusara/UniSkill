@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { adminAPI } from '../../api/api';
-import { User, Mail, Lock, GraduationCap, Building2, UserCheck, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, GraduationCap, Building2, UserCheck, ArrowRight, BookOpen } from 'lucide-react';
 
 const Register = () => {
   const [role, setRole] = useState('student');
@@ -11,6 +11,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [department, setDepartment] = useState('');
+  const [degree, setDegree] = useState('');
   const [studentId, setStudentId] = useState('');
   const [batchYear, setBatchYear] = useState('');
   const [designation, setDesignation] = useState('Lecturer');
@@ -27,9 +28,6 @@ const Register = () => {
         const res = await adminAPI.getDepartments();
         if (res.data?.departments) {
           setDepartmentsList(res.data.departments);
-          if (res.data.departments.length > 0) {
-            setDepartment(res.data.departments[0]._id);
-          }
         }
       } catch (err) {
         console.error('Error fetching departments', err);
@@ -38,10 +36,23 @@ const Register = () => {
     fetchDepts();
   }, []);
 
+  // Get currently selected department object
+  const selectedDept = departmentsList.find((d) => d._id === department);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) {
       showError('Please fill in all required fields');
+      return;
+    }
+
+    if (!department) {
+      showError('Please select your academic department');
+      return;
+    }
+
+    if (role === 'student' && selectedDept?.degrees?.length > 0 && !degree) {
+      showError('Please select your degree program');
       return;
     }
 
@@ -52,7 +63,8 @@ const Register = () => {
         email,
         password,
         role,
-        department: department || undefined,
+        department,
+        degree: role === 'student' ? degree : undefined,
         studentId: role === 'student' ? studentId : undefined,
         batchYear: role === 'student' ? batchYear : undefined,
         designation: role === 'supervisor' ? designation : undefined,
@@ -159,20 +171,59 @@ const Register = () => {
         {departmentsList.length > 0 && (
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Department
+              Academic Department *
             </label>
             <div className="relative">
               <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <select
                 value={department}
-                onChange={(e) => setDepartment(e.target.value)}
+                onChange={(e) => {
+                  setDepartment(e.target.value);
+                  setDegree('');
+                }}
+                required
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white"
               >
+                <option value="">-- Select Your Department * --</option>
                 {departmentsList.map((d) => (
                   <option key={d._id} value={d._id}>
                     {d.name} ({d.code})
                   </option>
                 ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Degree Program Selection (Students Only) */}
+        {role === 'student' && (
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Degree / Academic Program *
+            </label>
+            <div className="relative">
+              <BookOpen className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <select
+                value={degree}
+                onChange={(e) => setDegree(e.target.value)}
+                disabled={!department}
+                required={!!(selectedDept?.degrees && selectedDept.degrees.length > 0)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white disabled:opacity-50 disabled:bg-slate-100"
+              >
+                {!department ? (
+                  <option value="">-- Select Department first to view degrees --</option>
+                ) : selectedDept?.degrees && selectedDept.degrees.length > 0 ? (
+                  <>
+                    <option value="">-- Select Your Degree Program * --</option>
+                    {selectedDept.degrees.map((deg, idx) => (
+                      <option key={deg._id || idx} value={deg.name}>
+                        {deg.name} {deg.code ? `(${deg.code})` : ''}
+                      </option>
+                    ))}
+                  </>
+                ) : (
+                  <option value="General Degree Program">General Degree Program</option>
+                )}
               </select>
             </div>
           </div>

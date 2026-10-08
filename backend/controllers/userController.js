@@ -12,6 +12,7 @@ exports.updateProfile = async (req, res, next) => {
       bio,
       phone,
       department,
+      degree,
       studentId,
       batchYear,
       education,
@@ -35,6 +36,7 @@ exports.updateProfile = async (req, res, next) => {
     if (department !== undefined) user.department = department || null;
 
     if (user.role === 'student') {
+      if (degree !== undefined) user.degree = degree;
       if (studentId !== undefined) user.studentId = studentId;
       if (batchYear !== undefined) user.batchYear = batchYear;
       if (education !== undefined) user.education = education;
@@ -51,7 +53,7 @@ exports.updateProfile = async (req, res, next) => {
     await user.save();
 
     const updatedUser = await User.findById(user._id)
-      .populate('department', 'name code')
+      .populate('department', 'name code degrees')
       .populate('skills.skill');
 
     res.json({

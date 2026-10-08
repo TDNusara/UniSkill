@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { userAPI, authAPI } from '../../api/api';
+import { userAPI, authAPI, adminAPI } from '../../api/api';
 import { useToast } from '../../context/ToastContext';
 import {
   User,
@@ -23,6 +23,9 @@ const ProfileSettings = () => {
   const [avatar, setAvatar] = useState(user?.avatar || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [department, setDepartment] = useState(user?.department?._id || user?.department || '');
+  const [degree, setDegree] = useState(user?.degree || user?.education?.[0]?.degree || '');
+  const [departmentsList, setDepartmentsList] = useState([]);
   const [studentId, setStudentId] = useState(user?.studentId || '');
   const [batchYear, setBatchYear] = useState(user?.batchYear || '');
   const [designation, setDesignation] = useState(user?.designation || '');
@@ -30,6 +33,22 @@ const ProfileSettings = () => {
   const [researchInterestsInput, setResearchInterestsInput] = useState(
     user?.researchInterests ? user.researchInterests.join(', ') : ''
   );
+
+  useEffect(() => {
+    const fetchDepts = async () => {
+      try {
+        const res = await adminAPI.getDepartments();
+        if (res.data?.departments) {
+          setDepartmentsList(res.data.departments);
+        }
+      } catch (err) {
+        console.error('Error fetching departments:', err);
+      }
+    };
+    fetchDepts();
+  }, []);
+
+  const selectedDept = departmentsList.find((d) => d._id === department);
 
   const [github, setGithub] = useState(user?.socialLinks?.github || '');
   const [linkedin, setLinkedin] = useState(user?.socialLinks?.linkedin || '');
@@ -51,6 +70,8 @@ const ProfileSettings = () => {
         avatar,
         bio,
         phone,
+        department: department || undefined,
+        degree: user?.role === 'student' ? degree : undefined,
         studentId: user?.role === 'student' ? studentId : undefined,
         batchYear: user?.role === 'student' ? batchYear : undefined,
         socialLinks:
@@ -173,6 +194,56 @@ const ProfileSettings = () => {
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Academic Department
+              </label>
+              <select
+                value={department}
+                onChange={(e) => {
+                  setDepartment(e.target.value);
+                  setDegree('');
+                }}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white"
+              >
+                <option value="">Select Department (e.g. SE, EEE, IT, CSE, DSAI...)</option>
+                {departmentsList.map((d) => (
+                  <option key={d._id} value={d._id}>
+                    {d.name} ({d.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {user?.role === 'student' && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Degree / Academic Program
+                </label>
+                <select
+                  value={degree}
+                  onChange={(e) => setDegree(e.target.value)}
+                  disabled={!department}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white disabled:opacity-50"
+                >
+                  {!department ? (
+                    <option value="">Select Department first</option>
+                  ) : selectedDept?.degrees && selectedDept.degrees.length > 0 ? (
+                    <>
+                      <option value="">Select Degree Program</option>
+                      {selectedDept.degrees.map((deg, idx) => (
+                        <option key={deg._id || idx} value={deg.name}>
+                          {deg.name} {deg.code ? `(${deg.code})` : ''}
+                        </option>
+                      ))}
+                    </>
+                  ) : (
+                    <option value={degree || "General Degree"}>{degree || "General Degree"}</option>
+                  )}
+                </select>
+              </div>
+            )}
 
             {user?.role === 'student' && (
               <>

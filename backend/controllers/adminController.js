@@ -130,14 +130,103 @@ exports.getDepartments = async (req, res, next) => {
 
 exports.createDepartment = async (req, res, next) => {
   try {
-    const { name, code, description } = req.body;
+    const { name, code, description, degrees } = req.body;
+    
+    // Format degrees if provided
+    let formattedDegrees = [];
+    if (Array.isArray(degrees)) {
+      formattedDegrees = degrees
+        .filter(d => d && (typeof d === 'string' ? d.trim() : d.name?.trim()))
+        .map(d => (typeof d === 'string' ? { name: d.trim() } : { name: d.name.trim(), code: d.code?.trim() || '', durationYears: Number(d.durationYears) || 4 }));
+    }
+
     const department = await Department.create({
       name: name.trim(),
       code: code.trim().toUpperCase(),
       description: description || '',
+      degrees: formattedDegrees,
     });
 
     res.status(201).json({ success: true, department, message: 'Department created successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateDepartment = async (req, res, next) => {
+  try {
+    const { name, code, description, degrees } = req.body;
+    const department = await Department.findById(req.params.id);
+
+    if (!department) {
+      return res.status(404).json({ success: false, message: 'Department not found' });
+    }
+
+    if (name) department.name = name.trim();
+    if (code) department.code = code.trim().toUpperCase();
+    if (description !== undefined) department.description = description;
+    
+    if (Array.isArray(degrees)) {
+      department.degrees = degrees
+        .filter(d => d && (typeof d === 'string' ? d.trim() : d.name?.trim()))
+        .map(d => (typeof d === 'string' ? { name: d.trim() } : { name: d.name.trim(), code: d.code?.trim() || '', durationYears: Number(d.durationYears) || 4 }));
+    }
+
+    await department.save();
+
+    res.json({ success: true, department, message: 'Department updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addDegreeToDepartment = async (req, res, next) => {
+  try {
+    const { name, code, durationYears } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Degree program name is required' });
+    }
+
+    const department = await Department.findById(req.params.id);
+    if (!department) {
+      return res.status(404).json({ success: false, message: 'Department not found' });
+    }
+
+    department.degrees.push({
+      name: name.trim(),
+      code: code ? code.trim() : '',
+      durationYears: Number(durationYears) || 4,
+    });
+
+    await department.save();
+
+    res.status(201).json({
+      success: true,
+      department,
+      message: `Degree program "${name.trim()}" added to ${department.name}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteDegreeFromDepartment = async (req, res, next) => {
+  try {
+    const { id, degreeId } = req.params;
+    const department = await Department.findById(id);
+
+    if (!department) {
+      return res.status(404).json({ success: false, message: 'Department not found' });
+    }
+
+    department.degrees = department.degrees.filter(d => d._id.toString() !== degreeId);
+    await department.save();
+
+    res.json({
+      success: true,
+      department,
+      message: 'Degree program removed successfully',
+    });
   } catch (error) {
     next(error);
   }

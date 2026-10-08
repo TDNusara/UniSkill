@@ -57,6 +57,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    degree: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     batchYear: {
       type: String,
       default: '',

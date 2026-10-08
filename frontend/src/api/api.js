@@ -94,6 +94,9 @@ export const adminAPI = {
   toggleUserStatus: (id) => api.patch(`/admin/users/${id}/toggle-status`),
   getDepartments: () => api.get('/admin/departments'),
   createDepartment: (data) => api.post('/admin/departments', data),
+  updateDepartment: (id, data) => api.put(`/admin/departments/${id}`, data),
+  addDegree: (deptId, data) => api.post(`/admin/departments/${deptId}/degrees`, data),
+  deleteDegree: (deptId, degreeId) => api.delete(`/admin/departments/${deptId}/degrees/${degreeId}`),
   deleteDepartment: (id) => api.delete(`/admin/departments/${id}`),
 };
 

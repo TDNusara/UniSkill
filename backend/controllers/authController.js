@@ -8,7 +8,7 @@ const { sendOtpEmail } = require('../utils/sendEmail');
 // @access  Public
 exports.registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, role, department, studentId, batchYear, designation } = req.body;
+    const { name, email, password, role, department, degree, studentId, batchYear, designation } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -21,19 +21,32 @@ exports.registerUser = async (req, res, next) => {
     // Role safety: normal registration cannot create admin
     const assignedRole = role === 'admin' ? 'student' : role || 'student';
 
+    // Department is mandatory for all registrations
+    if (!department) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select your academic department',
+      });
+    }
+
     const user = await User.create({
       name,
       email,
       password,
       role: assignedRole,
       department: department || null,
+      degree: assignedRole === 'student' ? degree : undefined,
       studentId: assignedRole === 'student' ? studentId : undefined,
       batchYear: assignedRole === 'student' ? batchYear : undefined,
       designation: assignedRole === 'supervisor' ? designation : undefined,
+      education:
+        assignedRole === 'student' && degree
+          ? [{ degree, institution: 'University Department', startYear: batchYear || '' }]
+          : [],
     });
 
     const populatedUser = await User.findById(user._id)
-      .populate('department', 'name code')
+      .populate('department', 'name code degrees')
       .populate('skills.skill');
 
     res.status(201).json({
@@ -46,11 +59,13 @@ exports.registerUser = async (req, res, next) => {
         role: populatedUser.role,
         avatar: populatedUser.avatar,
         department: populatedUser.department,
+        degree: populatedUser.degree,
         studentId: populatedUser.studentId,
         batchYear: populatedUser.batchYear,
         designation: populatedUser.designation,
         skills: populatedUser.skills,
         bio: populatedUser.bio,
+        education: populatedUser.education,
       },
     });
   } catch (error) {
@@ -110,7 +125,7 @@ exports.loginUser = async (req, res, next) => {
     }
 
     const populatedUser = await User.findById(user._id)
-      .populate('department', 'name code')
+      .populate('department', 'name code degrees')
       .populate('skills.skill');
 
     res.json({
@@ -123,6 +138,7 @@ exports.loginUser = async (req, res, next) => {
         role: populatedUser.role,
         avatar: populatedUser.avatar,
         department: populatedUser.department,
+        degree: populatedUser.degree,
         studentId: populatedUser.studentId,
         batchYear: populatedUser.batchYear,
         designation: populatedUser.designation,
@@ -145,7 +161,7 @@ exports.loginUser = async (req, res, next) => {
 exports.getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate('department', 'name code')
+      .populate('department', 'name code degrees')
       .populate('skills.skill');
 
     res.json({

@@ -19,6 +19,24 @@ const departmentSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    degrees: [
+      {
+        name: {
+          type: String,
+          required: [true, 'Degree name is required'],
+          trim: true,
+        },
+        code: {
+          type: String,
+          trim: true,
+          default: '',
+        },
+        durationYears: {
+          type: Number,
+          default: 4,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
