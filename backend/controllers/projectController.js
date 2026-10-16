@@ -2,6 +2,7 @@ const Project = require('../models/Project');
 const ProjectRequest = require('../models/ProjectRequest');
 const Milestone = require('../models/Milestone');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 // @desc    Get all public / approved / in_progress projects with filters
 // @route   GET /api/projects
@@ -42,6 +43,7 @@ exports.getProjects = async (req, res, next) => {
     const projects = await Project.find(query)
       .populate('creator', 'name email avatar role studentId')
       .populate('supervisor', 'name email avatar designation')
+      .populate('requestedSupervisor', 'name email avatar designation')
       .populate('members.user', 'name email avatar role studentId skills')
       .populate('department', 'name code')
       .populate('requiredSkills', 'name category')
@@ -65,6 +67,7 @@ exports.getProjectById = async (req, res, next) => {
     const project = await Project.findById(req.params.id)
       .populate('creator', 'name email avatar role studentId department')
       .populate('supervisor', 'name email avatar designation researchInterests officeLocation')
+      .populate('requestedSupervisor', 'name email avatar designation researchInterests officeLocation department')
       .populate('members.user', 'name email avatar role studentId skills')
       .populate('department', 'name code')
       .populate('requiredSkills', 'name category');
@@ -78,10 +81,19 @@ exports.getProjectById = async (req, res, next) => {
 
     const milestones = await Milestone.find({ project: project._id }).sort({ dueDate: 1 });
 
+    const latestSupervisorRequest = await ProjectRequest.findOne({
+      project: project._id,
+      type: 'supervisor_request',
+    })
+      .populate('recipient', 'name email avatar designation researchInterests officeLocation department')
+      .populate('sender', 'name email avatar role')
+      .sort({ createdAt: -1 });
+
     res.json({
       success: true,
       project,
       milestones,
+      latestSupervisorRequest,
     });
   } catch (error) {
     next(error);
@@ -108,6 +120,10 @@ exports.createProject = async (req, res, next) => {
       supervisorId,
     } = req.body;
 
+    const isSupervisorCreator = req.user.role === 'supervisor';
+    const assignedSupervisor = isSupervisorCreator ? req.user._id : null;
+    const hasRequestedSupervisor = !isSupervisorCreator && Boolean(supervisorId);
+
     const project = await Project.create({
       title,
       description,
@@ -121,7 +137,14 @@ exports.createProject = async (req, res, next) => {
       githubRepo: githubRepo || '',
       liveDemoUrl: liveDemoUrl || '',
       creator: req.user._id,
-      supervisor: supervisorId || null,
+      supervisor: assignedSupervisor,
+      requestedSupervisor: hasRequestedSupervisor ? supervisorId : null,
+      supervisorRequestStatus: isSupervisorCreator
+        ? 'accepted'
+        : hasRequestedSupervisor
+        ? 'pending'
+        : 'none',
+      rejectionReason: '',
       members: [
         {
           user: req.user._id,
@@ -132,15 +155,28 @@ exports.createProject = async (req, res, next) => {
       status: 'in_progress', // Active project
     });
 
-    // If supervisor is selected during creation, send supervisor request
-    if (supervisorId) {
+    // If supervisor is requested during creation, send supervisor request & notification
+    if (hasRequestedSupervisor) {
       await ProjectRequest.create({
         type: 'supervisor_request',
         project: project._id,
         sender: req.user._id,
         recipient: supervisorId,
-        message: `Supervision request for project: ${title}`,
+        message: `Project supervision request for: ${title}`,
       });
+
+      try {
+        await Notification.create({
+          recipient: supervisorId,
+          sender: req.user._id,
+          title: 'New Project Supervision Request',
+          message: `${req.user.name} requested you to supervise the academic project "${title}".`,
+          type: 'supervisor_request',
+          link: '/requests',
+        });
+      } catch (notifErr) {
+        console.error('Error creating notification:', notifErr);
+      }
     }
 
     // Create 4 initial default milestones for the project

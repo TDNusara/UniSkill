@@ -371,10 +371,11 @@ const CreateProject = () => {
             <span>Supervisor Mentorship (Optional)</span>
           </h2>
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            <label htmlFor="supervisorSelect" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Select Faculty Supervisor to Request
             </label>
             <select
+              id="supervisorSelect"
               value={supervisorId}
               onChange={(e) => setSupervisorId(e.target.value)}
               className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white"
@@ -386,6 +387,9 @@ const CreateProject = () => {
                 </option>
               ))}
             </select>
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              * Selecting a supervisor sends them an invitation to review and accept your project proposal. The supervisor is only assigned after they approve the request.
+            </p>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Project = require('../models/Project');
 const ProjectRequest = require('../models/ProjectRequest');
+const Notification = require('../models/Notification');
 
 // @desc    Get directory of supervisors
 // @route   GET /api/supervisors
@@ -90,6 +91,26 @@ exports.requestSupervision = async (req, res, next) => {
       message: message || `Project supervision request for "${project.title}"`,
     });
 
+    // Update project state
+    project.requestedSupervisor = supervisorId;
+    project.supervisorRequestStatus = 'pending';
+    project.rejectionReason = '';
+    await project.save();
+
+    // Create notification for supervisor
+    try {
+      await Notification.create({
+        recipient: supervisorId,
+        sender: req.user._id,
+        title: 'New Project Supervision Request',
+        message: `${req.user.name} requested you to supervise the academic project "${project.title}".`,
+        type: 'supervisor_request',
+        link: '/requests',
+      });
+    } catch (notifErr) {
+      console.error('Notification error:', notifErr);
+    }
+
     res.status(201).json({
       success: true,
       request,
@@ -153,15 +174,32 @@ exports.respondToRequest = async (req, res, next) => {
     request.responseNote = responseNote || '';
     await request.save();
 
+    const projectId = request.project?._id || request.project;
+    const project = await Project.findById(projectId);
+
     // If accepted:
     if (status === 'accepted') {
-      const project = await Project.findById(request.project._id);
-
-      if (request.type === 'supervisor_request') {
+      if (project && request.type === 'supervisor_request') {
         project.supervisor = req.user._id;
+        project.supervisorRequestStatus = 'accepted';
+        project.rejectionReason = '';
         project.status = 'in_progress';
         await project.save();
-      } else if (request.type === 'join_group') {
+
+        // Notify student (request.sender)
+        try {
+          await Notification.create({
+            recipient: request.sender,
+            sender: req.user._id,
+            title: 'Supervision Request Accepted! 🎉',
+            message: `${req.user.name} accepted your request to supervise "${project.title}".`,
+            type: 'supervisor_request',
+            link: `/projects/${project._id}`,
+          });
+        } catch (nErr) {
+          console.error('Notification error:', nErr);
+        }
+      } else if (project && request.type === 'join_group') {
         const alreadyMember = project.members.some(
           (m) => m.user.toString() === request.sender.toString()
         );
@@ -175,6 +213,53 @@ exports.respondToRequest = async (req, res, next) => {
             project.isLookingForMembers = false;
           }
           await project.save();
+
+          try {
+            await Notification.create({
+              recipient: request.sender,
+              sender: req.user._id,
+              title: 'Join Request Accepted',
+              message: `You were accepted into the project team for "${project.title}".`,
+              type: 'join_request',
+              link: `/projects/${project._id}`,
+            });
+          } catch (nErr) {
+            console.error('Notification error:', nErr);
+          }
+        }
+      }
+    } else if (status === 'rejected') {
+      if (project && request.type === 'supervisor_request') {
+        project.supervisor = null;
+        project.supervisorRequestStatus = 'rejected';
+        project.rejectionReason = responseNote || 'Supervisor was unable to supervise this project at this time.';
+        await project.save();
+
+        // Notify student (request.sender)
+        try {
+          await Notification.create({
+            recipient: request.sender,
+            sender: req.user._id,
+            title: 'Supervision Request Declined ⚠️',
+            message: `${req.user.name} was unable to accept your supervision request for "${project.title}". ${responseNote ? `Reason: "${responseNote}"` : ''}`,
+            type: 'supervisor_request',
+            link: `/projects/${project._id}`,
+          });
+        } catch (nErr) {
+          console.error('Notification error:', nErr);
+        }
+      } else if (project && request.type === 'join_group') {
+        try {
+          await Notification.create({
+            recipient: request.sender,
+            sender: req.user._id,
+            title: 'Join Request Declined',
+            message: `Your request to join "${project.title}" was declined.`,
+            type: 'join_request',
+            link: `/projects/${project._id}`,
+          });
+        } catch (nErr) {
+          console.error('Notification error:', nErr);
         }
       }
     }

@@ -13,6 +13,9 @@ import {
   ExternalLink,
   Layers,
   Sparkles,
+  UserCheck,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react';
 
 const MyProjects = () => {
@@ -86,15 +89,35 @@ const MyProjects = () => {
             >
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Badge variant="primary" size="sm">
-                    {project.category}
-                  </Badge>
-                  <Badge
-                    variant={project.status === 'completed' ? 'success' : 'info'}
-                    size="sm"
-                  >
-                    {project.status.replace('_', ' ').toUpperCase()}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="primary" size="sm">
+                      {project.category}
+                    </Badge>
+                    <Badge
+                      variant={project.status === 'completed' ? 'success' : 'info'}
+                      size="sm"
+                    >
+                      {project.status.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  {/* Supervisor Status Badge */}
+                  {project.supervisor ? (
+                    <span className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg font-semibold inline-flex items-center gap-1">
+                      <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{project.supervisor.name}</span>
+                    </span>
+                  ) : project.supervisorRequestStatus === 'rejected' ? (
+                    <span className="text-[11px] text-rose-800 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-lg font-bold inline-flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Supervisor Declined</span>
+                    </span>
+                  ) : project.supervisorRequestStatus === 'pending' ? (
+                    <span className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-lg font-semibold inline-flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Supervisor Pending</span>
+                    </span>
+                  ) : null}
                 </div>
 
                 <div>

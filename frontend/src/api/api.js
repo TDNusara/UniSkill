@@ -102,4 +102,11 @@ export const adminAPI = {
   deleteDepartment: (id) => api.delete(`/admin/departments/${id}`),
 };
 
+// Notification Endpoints
+export const notificationAPI = {
+  getNotifications: () => api.get('/notifications'),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/notifications/read-all'),
+};
+
 export default api;

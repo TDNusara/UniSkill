@@ -49,6 +49,7 @@ app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/supervisors', require('./routes/supervisorRoutes'));
 app.use('/api/milestones', require('./routes/milestoneRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // Error handling middleware
 app.use(notFound);

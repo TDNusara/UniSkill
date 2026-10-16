@@ -42,6 +42,16 @@ const projectSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    requestedSupervisor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    supervisorRequestStatus: {
+      type: String,
+      enum: ['none', 'pending', 'accepted', 'rejected'],
+      default: 'none',
+    },
     members: [
       {
         user: {
