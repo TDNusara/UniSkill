@@ -26,41 +26,98 @@ const seedData = async () => {
     await ProjectRequest.deleteMany();
     console.log('[Seeder] Cleared previous database collections.');
 
-    // 1. Create Departments
+    // 1. Create Departments with Degrees
     const departments = await Department.insertMany([
-      { name: 'Computer Science and Engineering', code: 'CSE', description: 'Department of Computing and Algorithms' },
-      { name: 'Software Engineering', code: 'SE', description: 'Department of Software Architecture and Systems' },
-      { name: 'Information Technology', code: 'IT', description: 'Department of Applied Information Systems' },
-      { name: 'Electrical & Electronic Engineering', code: 'EEE', description: 'Department of Hardware and Electronics' },
-      { name: 'Data Science & AI', code: 'DSAI', description: 'Department of Artificial Intelligence & Big Data' },
+      {
+        name: 'Computer Science and Engineering',
+        code: 'CSE',
+        description: 'Department of Computing, Systems and Algorithms',
+        degrees: [
+          { name: 'B.Sc. in Computer Science', code: 'CS', durationYears: 4 },
+          { name: 'B.Sc. in Software Systems', code: 'SS', durationYears: 4 },
+        ],
+      },
+      {
+        name: 'Mechanical & Mechatronics Engineering',
+        code: 'MME',
+        description: 'Department of Mechanics, Robotics and Automated Systems',
+        degrees: [
+          { name: 'B.Sc. in Mechanical Engineering', code: 'ME', durationYears: 4 },
+          { name: 'B.Sc. in Robotics & Mechatronics', code: 'ROB', durationYears: 4 },
+        ],
+      },
+      {
+        name: 'Biomedical Sciences & Biotechnology',
+        code: 'BMB',
+        description: 'Department of Molecular Life Sciences, Pharmacology and Bioengineering',
+        degrees: [
+          { name: 'B.Sc. in Biomedical Science', code: 'BMS', durationYears: 4 },
+          { name: 'B.Sc. in Biotechnology', code: 'BIOTECH', durationYears: 4 },
+        ],
+      },
+      {
+        name: 'Business Administration & Economics',
+        code: 'BAE',
+        description: 'Department of Management, Finance, and Strategic Policy',
+        degrees: [
+          { name: 'BBA in Business Administration', code: 'BBA', durationYears: 4 },
+          { name: 'B.Sc. in Financial Economics', code: 'ECON', durationYears: 4 },
+        ],
+      },
+      {
+        name: 'Data Science & Artificial Intelligence',
+        code: 'DSAI',
+        description: 'Department of Big Data, Neural Computing & Intelligent Systems',
+        degrees: [
+          { name: 'B.Sc. in Data Science & AI', code: 'DSAI', durationYears: 4 },
+        ],
+      },
     ]);
-    console.log(`[Seeder] Seeded ${departments.length} departments.`);
+    console.log(`[Seeder] Seeded ${departments.length} departments with academic degree programs.`);
 
     const cseDept = departments[0];
-    const seDept = departments[1];
+    const mmeDept = departments[1];
+    const bmbDept = departments[2];
+    const baeDept = departments[3];
     const dsaiDept = departments[4];
 
-    // 2. Create Skills
+    // 2. Create Skills (Universal, Department-specific, and Degree-specific)
     const skillsList = [
-      { name: 'React.js', category: 'Web Development', description: 'Frontend JavaScript library for component-based UIs' },
-      { name: 'Node.js', category: 'Database & Backend', description: 'JavaScript runtime built on Chrome V8 engine' },
-      { name: 'Express.js', category: 'Database & Backend', description: 'Fast, unopinionated minimalist web framework' },
-      { name: 'MongoDB', category: 'Database & Backend', description: 'NoSQL document-oriented database' },
-      { name: 'Tailwind CSS', category: 'UI/UX Design', description: 'Utility-first CSS framework for rapid UI development' },
-      { name: 'Python', category: 'AI & Machine Learning', description: 'High-level programming language for ML and Data Science' },
-      { name: 'TensorFlow', category: 'AI & Machine Learning', description: 'End-to-end open source platform for machine learning' },
-      { name: 'PyTorch', category: 'AI & Machine Learning', description: 'Deep learning framework for computer vision and NLP' },
-      { name: 'Flutter', category: 'Mobile App Development', description: 'Google UI toolkit for multi-platform apps' },
-      { name: 'Docker', category: 'Cloud & DevOps', description: 'Containerization platform' },
-      { name: 'AWS Cloud', category: 'Cloud & DevOps', description: 'Cloud computing services by Amazon' },
-      { name: 'Figma UI/UX', category: 'UI/UX Design', description: 'Collaborative interface design tool' },
-      { name: 'Cybersecurity & Ethical Hacking', category: 'Cybersecurity', description: 'Network security, penetration testing & vulnerability assessment' },
-      { name: 'Project Management & Agile', category: 'Soft Skills & Management', description: 'Scrum, Sprint planning, and team leadership' },
-      { name: 'Embedded C / IoT', category: 'Embedded & IoT', description: 'Microcontrollers, Arduino, Raspberry Pi and ESP32' },
+      // Universal Skills (department: null)
+      { name: 'Academic Research Writing & Publication', category: 'Academic Writing & Literature Review', department: null, degree: '', description: 'Synthesis of peer-reviewed literature, methodology framing, and scholarly dissemination.' },
+      { name: 'Statistical Data Analysis (SPSS / R)', category: 'Data Analysis & Statistics', department: null, degree: '', description: 'Hypothesis testing, regression analysis, and experimental data significance validation.' },
+      { name: 'Research Ethics & Institutional Review (IRB)', category: 'Research Methodology & Ethics', department: null, degree: '', description: 'Ethical human/animal subject guidelines, confidentiality protocols, and research integrity.' },
+      
+      // Computer Science (CSE)
+      { name: 'React.js & Modern Frontend Architecture', category: 'Software & Computational Tools', department: cseDept._id, degree: 'B.Sc. in Computer Science', description: 'Component-based single page web application development.' },
+      { name: 'Node.js & Scalable Backend Systems', category: 'Software & Computational Tools', department: cseDept._id, degree: 'B.Sc. in Computer Science', description: 'Asynchronous event-driven server runtime and API architecture.' },
+      { name: 'Distributed Systems & Microservices', category: 'Software & Computational Tools', department: cseDept._id, degree: 'B.Sc. in Software Systems', description: 'Consensus algorithms, message brokers, and fault-tolerant architecture.' },
+      { name: 'Cloud Infrastructure & Kubernetes', category: 'Software & Computational Tools', department: cseDept._id, degree: '', description: 'Container orchestration, CI/CD automated deployment pipelines, and cloud clusters.' },
+
+      // Mechanical & Mechatronics (MME)
+      { name: 'Finite Element Analysis (FEA / ANSYS)', category: 'Modeling & Simulation', department: mmeDept._id, degree: 'B.Sc. in Mechanical Engineering', description: 'Stress, strain, thermal, and dynamic structural simulation of components.' },
+      { name: 'SolidWorks & 3D CAD Parametric Modeling', category: 'Design & Prototyping', department: mmeDept._id, degree: '', description: 'Computer-aided design, technical drafting, and mechanical assembly modeling.' },
+      { name: 'Robot Kinematics & ROS (Robot Operating System)', category: 'Hardware & Electronics', department: mmeDept._id, degree: 'B.Sc. in Robotics & Mechatronics', description: 'Forward/inverse kinematics, trajectory planning, and actuator motor controls.' },
+      { name: 'CNC Machining & Rapid Prototyping', category: 'Design & Prototyping', department: mmeDept._id, degree: 'B.Sc. in Mechanical Engineering', description: 'Subtractive manufacturing, G-code generation, and additive 3D fabrication.' },
+
+      // Biomedical Sciences & Biotech (BMB)
+      { name: 'Mammalian Cell Culture & Aseptic Technique', category: 'Experimental & Laboratory', department: bmbDept._id, degree: 'B.Sc. in Biomedical Science', description: 'Sterile cell propagation, media formulation, viability assays, and cryopreservation.' },
+      { name: 'Quantitative Real-Time PCR (qPCR)', category: 'Experimental & Laboratory', department: bmbDept._id, degree: '', description: 'Nucleic acid amplification, gene expression quantification, and primer design.' },
+      { name: 'Bioinformatics & Genomic Sequence Alignment', category: 'Software & Computational Tools', department: bmbDept._id, degree: 'B.Sc. in Biotechnology', description: 'BLAST, RNA-Seq transcriptomic processing, and phylogenetic analysis.' },
+      { name: 'High-Performance Liquid Chromatography (HPLC)', category: 'Experimental & Laboratory', department: bmbDept._id, degree: 'B.Sc. in Biomedical Science', description: 'Analytical chemistry separation and identification of biomolecular compounds.' },
+
+      // Business & Economics (BAE)
+      { name: 'Econometric Modeling & Time-Series Forecasting', category: 'Financial & Economic Analysis', department: baeDept._id, degree: 'B.Sc. in Financial Economics', description: 'Multivariate regression, ARIMA time series, and macroeconomic modeling.' },
+      { name: 'Corporate Financial Statement Valuation (DCF)', category: 'Financial & Economic Analysis', department: baeDept._id, degree: 'BBA in Business Administration', description: 'Discounted cash flow valuation, capital budgeting, and investment analysis.' },
+      { name: 'Quantitative Market Survey & Consumer Research', category: 'Field Work & Surveying', department: baeDept._id, degree: 'BBA in Business Administration', description: 'Survey instrument design, sampling methodology, and customer analytics.' },
+
+      // Data Science & AI (DSAI)
+      { name: 'Deep Neural Networks (PyTorch / TensorFlow)', category: 'AI & Machine Learning', department: dsaiDept._id, degree: 'B.Sc. in Data Science & AI', description: 'Computer vision, natural language processing, and neural network training.' },
+      { name: 'Big Data Pipeline Engineering (Apache Spark)', category: 'Data Analysis & Statistics', department: dsaiDept._id, degree: 'B.Sc. in Data Science & AI', description: 'Distributed data streaming, ETL pipelines, and parquet processing.' },
     ];
 
     const seededSkills = await Skill.insertMany(skillsList);
-    console.log(`[Seeder] Seeded ${seededSkills.length} skills.`);
+    console.log(`[Seeder] Seeded ${seededSkills.length} multidisciplinary skills.`);
 
     // 3. Create Users
     const hashedPassword = await bcrypt.hash('password123', 10);
@@ -111,6 +168,7 @@ const seedData = async () => {
         password: studentHashed,
         role: 'student',
         department: cseDept._id,
+        degree: 'B.Sc. in Computer Science',
         studentId: 'STU-2026-0042',
         batchYear: '2023 - 2027',
         bio: 'Passionate full-stack developer with strong foundations in React, Node.js, and cloud deployments. Seeking innovative capstone projects.',
@@ -120,14 +178,12 @@ const seedData = async () => {
           portfolio: 'https://alexmercer.dev',
         },
         skills: [
-          { skill: seededSkills[0]._id, level: 'Expert', verified: true }, // React
-          { skill: seededSkills[1]._id, level: 'Advanced', verified: true }, // Node.js
-          { skill: seededSkills[2]._id, level: 'Advanced', verified: true }, // Express
-          { skill: seededSkills[3]._id, level: 'Intermediate', verified: true }, // MongoDB
-          { skill: seededSkills[4]._id, level: 'Expert', verified: false }, // Tailwind
+          { skill: seededSkills[3]._id, level: 'Expert', verified: true }, // React
+          { skill: seededSkills[4]._id, level: 'Advanced', verified: true }, // Node.js
+          { skill: seededSkills[0]._id, level: 'Advanced', verified: true }, // Academic Research Writing
         ],
         education: [
-          { degree: 'B.Sc. (Hons) in Computer Science', institution: 'State University', startYear: '2023', endYear: '2027' },
+          { degree: 'B.Sc. in Computer Science', institution: 'State University', startYear: '2023', endYear: '2027' },
         ],
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
       },
@@ -136,21 +192,22 @@ const seedData = async () => {
         email: 'student2@uniskill.edu',
         password: studentHashed,
         role: 'student',
-        department: seDept._id,
+        department: cseDept._id,
+        degree: 'B.Sc. in Software Systems',
         studentId: 'STU-2026-0089',
         batchYear: '2023 - 2027',
-        bio: 'Software engineer focusing on frontend UI/UX, Flutter mobile apps, and REST API integration.',
+        bio: 'Software engineer focusing on microservices, distributed systems, and scalable backend platforms.',
         socialLinks: {
           github: 'https://github.com/sarahconnor',
           linkedin: 'https://linkedin.com/in/sarahconnor',
         },
         skills: [
-          { skill: seededSkills[0]._id, level: 'Advanced', verified: true }, // React
-          { skill: seededSkills[8]._id, level: 'Expert', verified: true }, // Flutter
-          { skill: seededSkills[11]._id, level: 'Advanced', verified: false }, // Figma
+          { skill: seededSkills[4]._id, level: 'Advanced', verified: true }, // Node.js
+          { skill: seededSkills[5]._id, level: 'Expert', verified: true }, // Distributed Systems
+          { skill: seededSkills[1]._id, level: 'Intermediate', verified: false }, // Statistics
         ],
         education: [
-          { degree: 'B.Sc. in Software Engineering', institution: 'State University', startYear: '2023', endYear: '2027' },
+          { degree: 'B.Sc. in Software Systems', institution: 'State University', startYear: '2023', endYear: '2027' },
         ],
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&q=80',
       },
@@ -160,21 +217,61 @@ const seedData = async () => {
         password: studentHashed,
         role: 'student',
         department: dsaiDept._id,
+        degree: 'B.Sc. in Data Science & AI',
         studentId: 'STU-2026-0112',
         batchYear: '2024 - 2028',
-        bio: 'AI enthusiast working on deep learning models and data engineering pipelines.',
+        bio: 'AI enthusiast working on deep neural network architectures and big data streaming pipelines.',
         socialLinks: {
           github: 'https://github.com/davidclark',
         },
         skills: [
-          { skill: seededSkills[5]._id, level: 'Expert', verified: true }, // Python
-          { skill: seededSkills[6]._id, level: 'Advanced', verified: false }, // TensorFlow
-          { skill: seededSkills[7]._id, level: 'Intermediate', verified: false }, // PyTorch
+          { skill: seededSkills[18]._id, level: 'Expert', verified: true }, // Deep Neural Networks
+          { skill: seededSkills[19]._id, level: 'Advanced', verified: false }, // Big Data
+          { skill: seededSkills[1]._id, level: 'Intermediate', verified: false }, // Statistics
         ],
         education: [
-          { degree: 'B.Sc. in Data Science and AI', institution: 'State University', startYear: '2024', endYear: '2028' },
+          { degree: 'B.Sc. in Data Science & AI', institution: 'State University', startYear: '2024', endYear: '2028' },
         ],
         avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=256&q=80',
+      },
+      {
+        name: 'Liam Vance',
+        email: 'student4@uniskill.edu',
+        password: studentHashed,
+        role: 'student',
+        department: mmeDept._id,
+        degree: 'B.Sc. in Robotics & Mechatronics',
+        studentId: 'STU-2026-0244',
+        batchYear: '2023 - 2027',
+        bio: 'Mechatronics engineering student conducting research in robotic manipulator kinematics and ROS autonomous mobile robots.',
+        skills: [
+          { skill: seededSkills[9]._id, level: 'Advanced', verified: true }, // Robot Kinematics & ROS
+          { skill: seededSkills[8]._id, level: 'Advanced', verified: true }, // SolidWorks & 3D CAD
+        ],
+        education: [
+          { degree: 'B.Sc. in Robotics & Mechatronics', institution: 'State University', startYear: '2023', endYear: '2027' },
+        ],
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80',
+      },
+      {
+        name: 'Chloe Bennett',
+        email: 'student5@uniskill.edu',
+        password: studentHashed,
+        role: 'student',
+        department: bmbDept._id,
+        degree: 'B.Sc. in Biomedical Science',
+        studentId: 'STU-2026-0318',
+        batchYear: '2023 - 2027',
+        bio: 'Biomedical sciences researcher working on mammalian cell culture, oncology drug assay screening, and qPCR quantification.',
+        skills: [
+          { skill: seededSkills[11]._id, level: 'Expert', verified: true }, // Cell Culture
+          { skill: seededSkills[12]._id, level: 'Advanced', verified: true }, // qPCR
+          { skill: seededSkills[14]._id, level: 'Intermediate', verified: false }, // HPLC
+        ],
+        education: [
+          { degree: 'B.Sc. in Biomedical Science', institution: 'State University', startYear: '2023', endYear: '2027' },
+        ],
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
       },
     ]);
     console.log(`[Seeder] Seeded ${users.length} users.`);
@@ -206,7 +303,7 @@ const seedData = async () => {
         { user: student1._id, role: 'Leader', joinedAt: new Date() },
         { user: student2._id, role: 'Member', joinedAt: new Date() },
       ],
-      requiredSkills: [seededSkills[0]._id, seededSkills[1]._id, seededSkills[2]._id, seededSkills[3]._id, seededSkills[4]._id],
+      requiredSkills: [seededSkills[3]._id, seededSkills[4]._id, seededSkills[0]._id],
       maxMembers: 4,
       isLookingForMembers: true,
       githubRepo: 'https://github.com/uniskill/uniskill-core',
@@ -231,7 +328,7 @@ const seedData = async () => {
       members: [
         { user: student3._id, role: 'Leader', joinedAt: new Date() },
       ],
-      requiredSkills: [seededSkills[5]._id, seededSkills[6]._id, seededSkills[7]._id, seededSkills[14]._id],
+      requiredSkills: [seededSkills[18]._id, seededSkills[19]._id, seededSkills[9]._id],
       maxMembers: 3,
       isLookingForMembers: true,
       githubRepo: 'https://github.com/davidclark/edge-ai-drone',

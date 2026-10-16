@@ -38,6 +38,7 @@ const CreateProject = () => {
   // Skills
   const [availableSkills, setAvailableSkills] = useState([]);
   const [selectedSkillIds, setSelectedSkillIds] = useState([]);
+  const [skillScope, setSkillScope] = useState('department');
 
   // Data lists
   const [departmentsList, setDepartmentsList] = useState([]);
@@ -263,33 +264,74 @@ const CreateProject = () => {
 
         {/* Skills & Teammates */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
-          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Award className="w-4 h-4 text-amber-500" />
-            <span>Required Skill Sets & Team Formation</span>
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Award className="w-4 h-4 text-amber-500" />
+              <span>Required Skill Sets & Team Formation</span>
+            </h2>
+
+            {department && (
+              <div className="flex p-0.5 bg-slate-100 rounded-lg text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setSkillScope('department')}
+                  className={`px-2.5 py-1 rounded-md transition-all ${
+                    skillScope === 'department'
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Department Skills
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSkillScope('all')}
+                  className={`px-2.5 py-1 rounded-md transition-all ${
+                    skillScope === 'all'
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  All Disciplines
+                </button>
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              Select Required Skills for Team Matching
+              Select Required Skills for Team Matching ({selectedSkillIds.length} selected)
             </label>
             <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-3 bg-slate-50 rounded-2xl border border-slate-200">
-              {availableSkills.map((sk) => {
-                const selected = selectedSkillIds.includes(sk._id);
-                return (
-                  <button
-                    key={sk._id}
-                    type="button"
-                    onClick={() => toggleSkill(sk._id)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
-                      selected
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    {sk.name}
-                  </button>
-                );
-              })}
+              {availableSkills
+                .filter((sk) => {
+                  if (skillScope === 'all') return true;
+                  if (!department) return true;
+                  const skDeptId = sk.department?._id || sk.department;
+                  return !skDeptId || skDeptId === department;
+                })
+                .map((sk) => {
+                  const selected = selectedSkillIds.includes(sk._id);
+                  return (
+                    <button
+                      key={sk._id}
+                      type="button"
+                      onClick={() => toggleSkill(sk._id)}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 ${
+                        selected
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <span>{sk.name}</span>
+                      {sk.degree && (
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded ${selected ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-500'}`}>
+                          {sk.degree}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
             </div>
           </div>
 

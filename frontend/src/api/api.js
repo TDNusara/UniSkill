@@ -56,6 +56,8 @@ export const userAPI = {
 export const skillAPI = {
   getSkills: (params) => api.get('/skills', { params }),
   createSkill: (skillData) => api.post('/skills', skillData),
+  updateSkill: (id, skillData) => api.put(`/skills/${id}`, skillData),
+  deleteSkill: (id) => api.delete(`/skills/${id}`),
 };
 
 // Projects Endpoints
